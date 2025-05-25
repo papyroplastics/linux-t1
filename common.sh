@@ -11,6 +11,8 @@ _meta_dir="$BOARD_DIR/.meta"
 
 _mode_path="$_meta_dir/mode.txt"
 
+_treasure_filename_path="$_meta_dir/treasure_filename.txt"
+_treasure_content_path="$_meta_dir/treasure_content.txt"
 _treasure_chksum_path="$_meta_dir/treasure_chksum.txt"
 
 _common_pass_path="$_meta_dir/common_pass.txt"
@@ -49,25 +51,31 @@ function _is_int {
     esac
 }
 
+function _checksum_file {
+    local file="$1"
+    local checksum=($(sha1sum "$file"))
+    echo ${checksum[0]}
+}
+
 function _encrypt_file {
-    local name="$1"
+    local file="$1"
     local pass="$2"
-    gpg $_gpg_flags --passphrase-file "$pass" --output "$name.tmp" --symmetric "$name"
-    mv -f "$name.tmp" "$name"
+    gpg $_gpg_flags --passphrase-file "$pass" --output "$file.tmp" --symmetric "$file" &>/dev/null
+    mv -f "$file.tmp" "$file"
 }
 
 function _decrypt_file {
-    local name="$1"
+    local file="$1"
     local pass="$2"
-    gpg $_gpg_flags --passphrase-file "$pass" --output - --decrypt "$name" 2>/dev/null
+    gpg $_gpg_flags --passphrase-file "$pass" --output - --decrypt "$file" &>/dev/null
     return $?
 }
 
 function _gen_key_pair {
     local privkey="$1"
     local pubkey="$2"
-    openssl genpkey -algorithm RSA -out "$privkey"
-    openssl rsa -pubout -in "$privkey" -out "$pubkey"
+    openssl genpkey -quiet -algorithm RSA -out "$privkey" &>/dev/null
+    openssl rsa -pubout -in "$privkey" -out "$pubkey" &>/dev/null
 }
 
 function _signature_path {
@@ -82,15 +90,15 @@ function _signature_path {
 }
 
 function _sign_file {
-    local name="$1"
+    local file="$1"
     local priv_key="$2"
-    openssl dgst -sha256 -sign "$priv_key" -out "$(_signature_path "$name")" "$name" &>/dev/null
+    openssl dgst -sha256 -sign "$priv_key" -out "$(_signature_path "$file")" "$file" &>/dev/null
 }
 
 function _verify_file {
-    local name="$1"
+    local file="$1"
     local pub_key="$2"
-    openssl dgst -sha256 -verify "$pub_key" -signature "$(_signature_path "$name")" "$name" &>/dev/null
+    openssl dgst -sha256 -verify "$pub_key" -signature "$(_signature_path "$file")" "$file" &>/dev/null
     return $?
 }
 
