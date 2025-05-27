@@ -9,7 +9,7 @@ function _create_files {
     for (( i = 1; i <= count; i++ )); do
         local filename="$path/$(_random_chars 10)"
         while [[ -e "$filename" ]]; do 
-            filename="$path/$"
+            filename="$path/$(_random_chars 10)"
         done
         touch "$filename"
     done

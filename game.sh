@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-shopt -s extglob # pattern matching extendido
-shopt -u dotglob # ignorar dotfiles en expansiones
-
 if [[ $# -ne 4 ]]; then 
     echo "use: $0 <depth> <width> <files> <mode>" 1>&2
     exit 0
